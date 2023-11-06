@@ -25,8 +25,10 @@
 
         <script src="javascript.js"></script>
 		<script src="gcode_to_turtle.js"></script>
+        <script src="pcode.js"></script>
 		<script src="draw_turtle_code.js"></script>
         <script src="handwriting_typewriter.js"></script>
+        <script src="web_instructions.js"></script>
         <script src="mechanics.js"></script>
         <script src="wifi.js"></script>
         <style>
@@ -78,7 +80,13 @@
                 margin: 7px ;
             }
             #section_mandalagaba {
-                background-color: #f7d9c4 ;
+                background-color: #F5F9E9 ;
+                border-radius: 10px ;
+                padding: 10px ;
+                margin: 7px ;
+            }
+            #section_web_instructions {
+                background-color: #F4AFAB ;
                 border-radius: 10px ;
                 padding: 10px ;
                 margin: 7px ;

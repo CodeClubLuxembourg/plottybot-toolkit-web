@@ -1,21 +1,45 @@
+<?php
+	$gondola = false ;
+	if( file_exists("/var/mode") ) {
+		$mode = file_get_contents( "/var/mode" ) ;
+		$mode = trim( $mode ) ;
+		if( $mode=="gondola" ) {
+			$gondola = true ;
+		}
+	}
+	$gondola_motor_distance = "" ;
+	if( file_exists("/var/gondola_motor_distance") ) {
+		$gondola_motor_distance = file_get_contents( "/var/gondola_motor_distance" ) ;
+		$gondola_motor_distance = trim( $gondola_motor_distance ) ;
+	}
+?>
 <div id="section_calibration">
 	<h2><span class="fas fa-crosshairs"></span>&nbsp;&nbsp;<strong>Calibration</strong></h2><br/>
-	<div id="section_calibration_selection">
-		<table>
-			<tr>
-				<td style="width:50%; vertical-align:top;">
-					<center><button id="calibrate_automatic" class="btn btn-lg btn-light" onMouseDown="calibrate_automatic()">Calibrate Automatically</button></center>
-					<br/>
-					PlottyBot will automatically find its edges, do this if you are drawing on an unrestricted surface.
-				</td>
-				<td style="width:50% vertical-align:top;">
-					<center><button id="calibrate_manually" class="btn btn-lg btn-light" onMouseDown="calibrate_manually()">Calibrate Manually</button></center>
-					<br/>
-					Lets you set the limits of the drawing area. Do this if you are drawing on a medium smaller than PlottyBot allows.
-				</td>
-			</tr>
-		</table>
-	</div>
+	<?php if( $mode=="gondola" ) { ?>
+		<div id="section_calibration_gondola">
+			<div class="alert alert-danger">
+				<span class="fas fa-exclamation-triangle"></span>&nbsp;After calibration, the head is expected to be <strong>exactly</strong> at the center of the drawing surface. You can move the belts by hand to get it in this position, but don't force the motors to turn. It's easiest to measure where the center is, draw a little there, and move the head to where the pen is exactly over the dot. The plotter does not need to be centered between drawings, only on calibration.</span>
+			</div>
+			<center>What is the distance (in centimeters) between the centers of the 2 motors? <input size="10" id="gondola_motor_distance" type="text" value="<?=$gondola_motor_distance?>"/> <button class="btn btn-light" onmousedown="gondola_calibrate()">Submit</button></center>
+		</div>
+	<?php } else { ?>
+		<div id="section_calibration_selection">
+			<table>
+				<tr>
+					<td style="width:50%; vertical-align:top;">
+						<center><button id="calibrate_automatic" class="btn btn-lg btn-light" onMouseDown="calibrate_automatic()">Calibrate Automatically</button></center>
+						<br/>
+						PlottyBot will automatically find its edges, do this if you are drawing on an unrestricted surface.
+					</td>
+					<td style="width:50% vertical-align:top;">
+						<center><button id="calibrate_manually" class="btn btn-lg btn-light" onMouseDown="calibrate_manually()">Calibrate Manually</button></center>
+						<br/>
+						Lets you set the limits of the drawing area. Do this if you are drawing on a medium smaller than PlottyBot allows.
+					</td>
+				</tr>
+			</table>
+		</div>
+	<?php } ?>
 	<div id="section_calibration_automatic" style="display:none">
 		<center><img src="loading.gif"/></center>
 	</div>

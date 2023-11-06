@@ -40,7 +40,7 @@
 		  	</div>
 		</div>
 		<div class="form-inline">
-			<div id="ink_refill_routine_parameters_refill_every_x" style="display:none">
+			<div id="ink_refill_routine_parameters_refill_every_x">
 				<input class="form-control" type="text" id="ink_refill_every_x" placeholder="Ink refill every X" onInput="ink_refill_every_x()"/> Refill every X distance travelled
 			</div>
 		</div>

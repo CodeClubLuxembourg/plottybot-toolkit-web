@@ -1,5 +1,5 @@
 <div id="section_handwriting_typewriter">
-	<h2><span class="fas fa-pen-fancy"></span>&nbsp;&nbsp;<strong>Handwritting Typewriter</strong></h2><br/>
+	<h2><span class="fas fa-pen-fancy"></span>&nbsp;&nbsp;<strong>Handwriting Typewriter</strong></h2><br/>
 	<script src="seedrandom.min.js"></script>
 	Load a Flexible Font from file:
 	<form id="myform" class="form-inline">
@@ -14,8 +14,8 @@
 			<tr><td colspan="3"><canvas id="work_canvas" style="background-color:#f3f3f3;"></canvas></td></tr>
 			<tr>
 				<td align="left">
-					<a href="javascript:void(0);" onClick="start_line_left();">&lt;</a>
-					<a href="javascript:void(0);" onClick="start_line_right();">&gt;</a>
+					<a href="javascript:void(0);" onClick="start_line_left(event);">&lt;</a>
+					<a href="javascript:void(0);" onClick="start_line_right(event);">&gt;</a>
 					<a href="javascript:void(0);" onClick="place_start_dot_switch();">*</a>
 				</td>
 				<td align="center">
@@ -23,8 +23,8 @@
 				</td>
 				<td align="right">
 					<a href="javascript:void(0);" onClick="place_end_dot_switch();">*</a>
-					<a href="javascript:void(0);" onClick="end_line_left();">&lt;</a>
-					<a href="javascript:void(0);" onClick="end_line_right();">&gt;</a>
+					<a href="javascript:void(0);" onClick="end_line_left(event);">&lt;</a>
+					<a href="javascript:void(0);" onClick="end_line_right(event);">&gt;</a>
 				</td>
 			</tr>
 		</table>

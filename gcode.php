@@ -9,6 +9,12 @@
 	  	</div>
 	</div>
 	<div class="form-inline">
+		<div class="form-check">
+			<button id="rotate_ccw" class="btn btn-light" onMouseDown="rotate_ccw()">Rotate Counter-Clockwise</button>&nbsp;
+			<button id="rotate_ccw" class="btn btn-light" onMouseDown="mirror_horizontally()">Mirror Horizontally</button>
+		</div>
+	</div>
+	<div class="form-inline">
 		Penstroke aggregation algorithm:
 		<select class="form-control" id="aggregation_algorithm" onChange="gcode_changed();">
 			<option value="none">as they come</option>

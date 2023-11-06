@@ -613,6 +613,22 @@ function find_endiest_end_line() {
 	return highest_x ;
 }
 
+function predistance_chars() {
+	for( char in ffont ) {
+		for( var i=0 ; i<ffont[char].length ; i++ ) {
+			console.log( char + " / " + i ) ;
+			select_char_to_be_edited( char, i ) ;
+			for( k=1 ; k<=6 ; k++ ) {
+				start_line_left() ;
+			}
+			for( k=1 ; k<=6 ; k++ ) {
+				end_line_right() ;
+			}
+			// select_char_to_be_edited( char, i ) ;
+		}
+	}
+}
+
 
 function check_start_line() {
 	if( work_start_dot.x!=-1 &&
@@ -638,12 +654,19 @@ function check_end_line() {
 		work_end_line = work_canvas_size - work_start_line ;
 	}
 }
-function start_line_left() {
+function start_line_left( e=null ) {
+	if( e!==null ) {
+		e.preventDefault() ;
+	}
+
 	if( first_start_line_adjust &&
 		find_startiest_start_line()!==false ) {
 		work_start_line = find_startiest_start_line() ;
 	} else {
 		work_start_line-- ;
+		if( e!==null && e.shiftKey ) {
+			work_start_line -= 9 ;
+		}
 		if( work_start_line<0 ) {
 			work_start_line = 0 ;
 		}
@@ -653,36 +676,57 @@ function start_line_left() {
 	build_char_variation_table() ;
 	first_start_line_adjust = false ;
 }
-function start_line_right() {
+function start_line_right( e=null ) {
+	if( e!==null ) {
+		e.preventDefault() ;
+	}
+
 	if( first_start_line_adjust &&
 		find_startiest_start_line()!==false ) {
 		work_start_line = find_startiest_start_line() ;
 	} else {
 		work_start_line++ ;
+		if( e!==null && e.shiftKey ) {
+			work_start_line += 9 ;
+		}
 	}
 	check_start_line() ;
 	select_char_to_be_edited( char_being_edited, variation_index_being_edited ) ;
 	build_char_variation_table() ;
 	first_start_line_adjust = false ;
 }
-function end_line_left() {
+function end_line_left( e=null ) {
+	if( e!==null ) {
+		e.preventDefault() ;
+	}
+
 	if( first_end_line_adjust &&
 		find_endiest_end_line()!==false ) {
 		work_end_line = work_canvas_size - find_endiest_end_line() ;
 	} else {
 		work_end_line++ ;
+		if( e!==null && e.shiftKey ) {
+			work_end_line += 9 ;
+		}
 	}
 	check_end_line() ;
 	select_char_to_be_edited( char_being_edited, variation_index_being_edited ) ;
 	build_char_variation_table() ;
 	first_end_line_adjust = false ;
 }
-function end_line_right() {
+function end_line_right( e=null ) {
+	if( e!==null ) {
+		e.preventDefault() ;
+	}
+
 	if( first_end_line_adjust &&
 		find_endiest_end_line()!==false ) {
 		work_end_line = work_canvas_size - find_endiest_end_line() ;
 	} else {
 		work_end_line-- ;
+		if( e!==null && e.shiftKey ) {
+			work_end_line -= 9 ;
+		}
 		if( work_end_line<0 ) {
 			work_end_line = 0 ;
 		}
@@ -990,79 +1034,103 @@ function turn_into_plotter_code( text ) {
 							// }
 
 							// method 3 ligature is the beginning of the next penstroke with each point correlated to the closest point of the end of the current penstroke
-							var end_of_current_stroke = [] ;
-							for( o=k+1 ; o<specs.strokes[j].length ; o++ ) {
-								end_of_current_stroke.push( {x:specs.strokes[j][o].x, y:specs.strokes[j][o].y} ) ;
-							}
-							var beginning_of_next_stroke = [] ;
-							for( p=0 ; p<next_specs.strokes.length ; p++ ) {
-								for( q=0 ; q<next_specs.strokes[p].length ; q++ ) {
-									// console.log( p + "," + q ) ;
-									if( next_specs.strokes[p][q].x==next_specs.start_dot.x &&
-										next_specs.strokes[p][q].y==next_specs.start_dot.y ) {
-										// that's the one!
-										// for( r=q ; r>=0 ; r-- ) {
-										for( r=0 ; r<=q ; r++ ) {
-											beginning_of_next_stroke.push( {x:next_specs.strokes[p][r].x, y:next_specs.strokes[p][r].y} ) ;
-										}
-										break ;
-										break ;
-									}
-								}
-							}
-							var end_of_current_stroke_x_distance    = end_of_current_stroke[end_of_current_stroke.length-1].x - end_of_current_stroke[0].x ;
-							var beginning_of_next_stroke_x_distance = beginning_of_next_stroke[0].x - beginning_of_next_stroke[beginning_of_next_stroke.length-1].x ;
-							// we shift the beginning of next stroke
-							var shifty = specs.end_dot.x - beginning_of_next_stroke[0].x ;
-							for( var r=0 ; r<beginning_of_next_stroke.length ; r++ ) {
-								beginning_of_next_stroke[r].x = beginning_of_next_stroke[r].x + shifty ;
-							}
-							var ligature_dots = [] ;
-							// console.log( beginning_of_next_stroke ) ;
-							// console.log( end_of_current_stroke ) ;
-							for( var s=0 ; s<beginning_of_next_stroke.length ; s++ ) {
-								var closest_dot_from_end_of_current_stroke = false ;
-								var closest_dot_from_end_of_current_stroke_distance = false ;
-								for( var t=0 ; t<end_of_current_stroke.length ; t++ ) {
-									var potential_distance = Math.abs( (beginning_of_next_stroke[s].x-beginning_of_next_stroke[0].x)-(end_of_current_stroke[t].x-end_of_current_stroke[0].x) ) ;
-									//console.log( potential_distance ) ;
-									if( closest_dot_from_end_of_current_stroke_distance===false ||
-										potential_distance<closest_dot_from_end_of_current_stroke_distance ) {
-										closest_dot_from_end_of_current_stroke_distance = potential_distance ;
-										closest_dot_from_end_of_current_stroke = end_of_current_stroke[t] ;
-									}
-								}
+							// var end_of_current_stroke = [] ;
+							// for( o=k+1 ; o<specs.strokes[j].length ; o++ ) {
+							// 	end_of_current_stroke.push( {x:specs.strokes[j][o].x, y:specs.strokes[j][o].y} ) ;
+							// }
+							// var beginning_of_next_stroke = [] ;
+							// for( p=0 ; p<next_specs.strokes.length ; p++ ) {
+							// 	for( q=0 ; q<next_specs.strokes[p].length ; q++ ) {
+							// 		// console.log( p + "," + q ) ;
+							// 		if( next_specs.strokes[p][q].x==next_specs.start_dot.x &&
+							// 			next_specs.strokes[p][q].y==next_specs.start_dot.y ) {
+							// 			// that's the one!
+							// 			// for( r=q ; r>=0 ; r-- ) {
+							// 			for( r=0 ; r<=q ; r++ ) {
+							// 				beginning_of_next_stroke.push( {x:next_specs.strokes[p][r].x, y:next_specs.strokes[p][r].y} ) ;
+							// 			}
+							// 			break ;
+							// 			break ;
+							// 		}
+							// 	}
+							// }
+							// var end_of_current_stroke_x_distance    = end_of_current_stroke[end_of_current_stroke.length-1].x - end_of_current_stroke[0].x ;
+							// var beginning_of_next_stroke_x_distance = beginning_of_next_stroke[0].x - beginning_of_next_stroke[beginning_of_next_stroke.length-1].x ;
+							// // we shift the beginning of next stroke
+							// var shifty = specs.end_dot.x - beginning_of_next_stroke[0].x ;
+							// for( var r=0 ; r<beginning_of_next_stroke.length ; r++ ) {
+							// 	beginning_of_next_stroke[r].x = beginning_of_next_stroke[r].x + shifty ;
+							// }
+							// var ligature_dots = [] ;
+							// // console.log( beginning_of_next_stroke ) ;
+							// // console.log( end_of_current_stroke ) ;
+							// for( var s=0 ; s<beginning_of_next_stroke.length ; s++ ) {
+							// 	var closest_dot_from_end_of_current_stroke = false ;
+							// 	var closest_dot_from_end_of_current_stroke_distance = false ;
+							// 	for( var t=0 ; t<end_of_current_stroke.length ; t++ ) {
+							// 		var potential_distance = Math.abs( (beginning_of_next_stroke[s].x-beginning_of_next_stroke[0].x)-(end_of_current_stroke[t].x-end_of_current_stroke[0].x) ) ;
+							// 		//console.log( potential_distance ) ;
+							// 		if( closest_dot_from_end_of_current_stroke_distance===false ||
+							// 			potential_distance<closest_dot_from_end_of_current_stroke_distance ) {
+							// 			closest_dot_from_end_of_current_stroke_distance = potential_distance ;
+							// 			closest_dot_from_end_of_current_stroke = end_of_current_stroke[t] ;
+							// 		}
+							// 	}
 
-								var end_of_current_stroke_weigth = beginning_of_next_stroke.length - 1 - s ;
-								var beginning_of_next_stroke_weigth = s ;
+							// 	var end_of_current_stroke_weigth = beginning_of_next_stroke.length - 1 - s ;
+							// 	var beginning_of_next_stroke_weigth = s ;
 
-								// console.log( "on dot: " ) ;
-								// console.log( beginning_of_next_stroke[s] ) ;
-								// console.log( "closest dot: " ) ;
-								// console.log( closest_dot_from_end_of_current_stroke ) ;
+							// 	// console.log( "on dot: " ) ;
+							// 	// console.log( beginning_of_next_stroke[s] ) ;
+							// 	// console.log( "closest dot: " ) ;
+							// 	// console.log( closest_dot_from_end_of_current_stroke ) ;
 
-								// console.log( "------" ) ;
-								// console.log( closest_dot_from_end_of_current_stroke ) ;
-								// console.log( end_of_current_stroke_weigth ) ;
-								// console.log( beginning_of_next_stroke_weigth ) ;
+							// 	// console.log( "------" ) ;
+							// 	// console.log( closest_dot_from_end_of_current_stroke ) ;
+							// 	// console.log( end_of_current_stroke_weigth ) ;
+							// 	// console.log( beginning_of_next_stroke_weigth ) ;
 										
-								var lig_dot = {x:beginning_of_next_stroke[s].x,
-											   //y:beginning_of_next_stroke[s].y } ;
-											   y:((beginning_of_next_stroke[s].y*beginning_of_next_stroke_weigth)+(closest_dot_from_end_of_current_stroke.y*end_of_current_stroke_weigth))/(end_of_current_stroke_weigth+beginning_of_next_stroke_weigth) };
-											   // y:(closest_dot_from_end_of_current_stroke.y*end_of_current_stroke_weigth+beginning_of_next_stroke[s].y*beginning_of_next_stroke_weigth)/(end_of_current_stroke_weigth+beginning_of_next_stroke_weigth)} ;
-											   // y:beginning_of_next_stroke[s].y} ;
-									           // y:beginning_of_next_stroke[s].y * (s*((specs.end_dot.y/beginning_of_next_stroke[s].y)-1)/(beginning_of_next_stroke.length-1)+1) } ;
-								//ligature_dots.unshift( lig_dot ) ;
-								ligature_dots.push( lig_dot ) ;
-							}
+							// 	var lig_dot = {x:beginning_of_next_stroke[s].x,
+							// 				   //y:beginning_of_next_stroke[s].y } ;
+							// 				   y:((beginning_of_next_stroke[s].y*beginning_of_next_stroke_weigth)+(closest_dot_from_end_of_current_stroke.y*end_of_current_stroke_weigth))/(end_of_current_stroke_weigth+beginning_of_next_stroke_weigth) };
+							// 				   // y:(closest_dot_from_end_of_current_stroke.y*end_of_current_stroke_weigth+beginning_of_next_stroke[s].y*beginning_of_next_stroke_weigth)/(end_of_current_stroke_weigth+beginning_of_next_stroke_weigth)} ;
+							// 				   // y:beginning_of_next_stroke[s].y} ;
+							// 		           // y:beginning_of_next_stroke[s].y * (s*((specs.end_dot.y/beginning_of_next_stroke[s].y)-1)/(beginning_of_next_stroke.length-1)+1) } ;
+							// 	//ligature_dots.unshift( lig_dot ) ;
+							// 	ligature_dots.push( lig_dot ) ;
+							// }
+
+							// ligature_length = ligature_dots[ligature_dots.length-1].x - ligature_dots[0].x ;
+							// for( var s=0 ; s<ligature_dots.length ; s++ ) {
+							// 	cords = {x:pen_position.x + (ligature_dots[s].x-shift_by)*scale,
+					     	// 	         y:pen_position.y + (ligature_dots[s].y)*scale}
+							// 	plotter_code += "go_to( " + cords.x + ", " + (canvas_max_y-cords.y) + ")\n" ;
+							// }
 
 
+							// method 3 ligature the letters joined at their end/start lines with overlapping strokes from end point to start point averaged
+							var ligature_dots = compute_ligature_dots( specs, next_specs ) ;
 							ligature_length = ligature_dots[ligature_dots.length-1].x - ligature_dots[0].x ;
 							for( var s=0 ; s<ligature_dots.length ; s++ ) {
 								cords = {x:pen_position.x + (ligature_dots[s].x-shift_by)*scale,
 					     		         y:pen_position.y + (ligature_dots[s].y)*scale}
 								plotter_code += "go_to( " + cords.x + ", " + (canvas_max_y-cords.y) + ")\n" ;
 							}
+
+							// ligature_gravity_point = {y:next_specs.start_dot.y, total:0} ;
+							// for( o=k+1 ; o<specs.strokes[j].length ; o++ ) {
+							// 	ligature_gravity_point.total++ ;
+							// }
+							// for( o=k+1 ; o<specs.strokes[j].length ; o++ ) {
+							// 	cords = {x:pen_position.x + (specs.strokes[j][o].x-shift_by)*scale,
+							// 	         //y:pen_position.y + (specs.strokes[j][o].y)*scale} ;
+							// 	         y:pen_position.y + ( specs.strokes[j][o].y/(((ligature_gravity_point.y/specs.strokes[j][o].y)-1.0)*(k+1-o)/(specs.strokes[j].length-(k+1))+1.0) )*scale} ;
+							// 	plotter_code += "go_to( " + cords.x + ", " + (canvas_max_y-cords.y) + ")\n" ;
+							// }
+							// ligature_length = specs.strokes[j][specs.strokes[j].length-1].x - specs.end_dot.x ;
+
+
+							
 
 							// console.log( "+++++++++++" ) ;
 
@@ -1229,6 +1297,208 @@ function turn_into_plotter_code( text ) {
 		}
 	}
 	return plotter_code ;
+}
+
+
+function compute_ligature_dots( current_specs, next_specs ) {
+	// console.log( "--------------------------------" ) ;
+
+	var space_between_end_dot_and_start_dot = (256-current_specs.end_line - current_specs.end_dot.x) + (next_specs.start_dot.x - next_specs.start_line) ;
+	// console.log( "current_specs" ) ;
+	// console.log( current_specs ) ;
+	// console.log( "next_specs" ) ;
+	// console.log( next_specs ) ;
+	// console.log( space_between_end_dot_and_start_dot ) ;
+
+	// calculating the meeting point
+	var current_stop_point = false ;
+	var current_matched_end_dot = false ;
+	for( var i=0 ; i<current_specs.strokes.length ; i++ ) {
+		for( var j=0 ; j<current_specs.strokes[i].length ; j++ ) {
+			if( current_specs.strokes[i][j].x==current_specs.end_dot.x &&
+				current_specs.strokes[i][j].y==current_specs.end_dot.y ) {
+				current_matched_end_dot = true ;
+			}
+			if( current_matched_end_dot &&
+				current_specs.strokes[i][j].x>=(256-current_specs.end_line) ) {
+				current_stop_point = {x:current_specs.strokes[i][j].x,
+									  y:current_specs.strokes[i][j].y} ;
+				break ;
+			}
+		}
+		if( current_matched_end_dot ) {
+			break ;
+		}
+	}
+	// console.log( "current_stop_point" ) ;
+	// console.log( current_stop_point ) ;
+	if( current_stop_point===false ) {
+		current_stop_point = current_specs.end_dot ;
+		// console.log( "current_stop_point" ) ;
+		// console.log( current_stop_point ) ;
+	}
+
+	var next_start_point = false ;
+	var next_matched_start_dot = false ;
+	for( var i=(next_specs.strokes.length-1) ; i>=0 ; i-- ) {
+		for( var j=(next_specs.strokes[i].length-1) ; j>=0 ; j-- ) {
+			if( next_specs.strokes[i][j].x==next_specs.start_dot.x &&
+				next_specs.strokes[i][j].y==next_specs.start_dot.y ) {
+				next_matched_start_dot = true ;
+			}
+			if( next_matched_start_dot &&
+				next_specs.strokes[i][j].x<=next_specs.start_line ) {
+				next_start_point = {x:next_specs.strokes[i][j].x,
+									y:next_specs.strokes[i][j].y} ;
+				break ;
+			}
+		}
+		if( next_matched_start_dot ) {
+			break ;
+		}
+	}
+	// console.log( "next_start_point" ) ;
+	// console.log( next_start_point ) ;
+	if( next_start_point===false ) {
+		next_start_point = next_specs.start_dot ;
+		// console.log( "next_start_point" ) ;
+		// console.log( next_start_point ) ;
+	}
+
+	var height_favoritism_weigth = 1.0 ;
+	var current_y_weight = 1.0 ;
+	var next_y_weight = 1.0 ;
+	if( current_stop_point.y<next_start_point.y ) {
+		current_y_weight = height_favoritism_weigth ;
+	} else if( current_stop_point.y>next_start_point.y ) {
+		next_y_weight = height_favoritism_weigth ;
+	}
+	// console.log( "current_y_weight" ) ;
+	// console.log( current_y_weight ) ;
+	// console.log( "next_y_weight" ) ;
+	// console.log( next_y_weight ) ;
+	var meeting_point = {x:Math.round( current_stop_point.x ),
+						 y:Math.round( (current_stop_point.y*current_y_weight + next_start_point.y*next_y_weight)/(current_y_weight + next_y_weight) )} ;
+	// console.log( "meeting_point" ) ;
+	// console.log( meeting_point ) ;
+
+
+	var ligature_current_dots = [] ;
+	var current_matched_end_dot = false ;
+	for( var i=0 ; i<current_specs.strokes.length ; i++ ) {
+		for( var j=0 ; j<current_specs.strokes[i].length ; j++ ) {
+			if( current_specs.strokes[i][j].x==current_specs.end_dot.x &&
+				current_specs.strokes[i][j].y==current_specs.end_dot.y ) {
+				current_matched_end_dot = true ;
+			}
+			if( current_matched_end_dot ) {
+				for( var k=j ; k<current_specs.strokes[i].length ; k++ ) {
+					if( current_specs.strokes[i][k].x<=meeting_point.x ) {
+						ligature_current_dots.push( {x:current_specs.strokes[i][k].x,
+													 y:current_specs.strokes[i][k].y} ) ;
+					} else {
+						break ;
+					}
+				}
+				break ;
+			}
+		}
+		if( current_matched_end_dot ) {
+			break ;
+		}
+	}
+	var ligature_next_dots = [] ;
+	var next_matched_start_dot = false ;
+	for( var i=(next_specs.strokes.length-1) ; i>=0 ; i-- ) {
+		for( var j=(next_specs.strokes[i].length-1) ; j>=0 ; j-- ) {
+			if( next_specs.strokes[i][j].x==next_specs.start_dot.x &&
+				next_specs.strokes[i][j].y==next_specs.start_dot.y ) {
+				next_matched_start_dot = true ;
+			}
+			if( next_matched_start_dot ) {
+				for( var k=j ; k>=0 ; k-- ) {
+					var shifted_x = current_specs.end_dot.x + space_between_end_dot_and_start_dot + next_specs.strokes[i][k].x - next_specs.start_dot.x ;
+					if( shifted_x>meeting_point.x ) {
+						ligature_next_dots.unshift( {x:shifted_x,
+												     y:next_specs.strokes[i][k].y} ) ;
+					} else {
+						break ;
+					}
+				}
+				break ;
+			}
+		}
+		if( next_matched_start_dot ) {
+			break ;
+		}
+	}
+
+	// console.log( "ligature_current_dots" ) ;
+	// console.log( ligature_current_dots ) ;
+	// console.log( "ligature_next_dots" ) ;
+	// console.log( ligature_next_dots ) ;
+
+	var ligature_dots = [] ;
+	for( var i=0 ; i<ligature_current_dots.length ; i++ ) {
+		var weighted_y = ((ligature_current_dots[i].y * (ligature_current_dots.length-1-i)) + (meeting_point.y*(i+2/*current has extra power*/))) / (ligature_current_dots.length-1+2/*current has extra power*/) ;
+		if( isNaN(weighted_y) ) {
+			weighted_y = ligature_current_dots[i].y ;
+		}
+		ligature_dots.push( {x:ligature_current_dots[i].x,
+						     y:weighted_y} ) ;
+	}
+	for( var i=0 ; i<ligature_next_dots.length ; i++ ) {
+		var weighted_y = ((ligature_next_dots[i].y*i) + (meeting_point.y*(ligature_next_dots.length-1-i))) / (ligature_next_dots.length-1) ;
+		if( isNaN(weighted_y) ) {
+			weighted_y = ligature_next_dots[i].y ;
+		}
+		ligature_dots.push( {x:ligature_next_dots[i].x,
+						     y:weighted_y} ) ;
+	}
+
+	// ligature_dots.push( {x:current_specs.end_dot.x,
+	// 					 y:current_specs.end_dot.y} ) ;
+	// ligature_dots.push( {x:current_specs.end_dot.x + space_between_end_dot_and_start_dot + next_specs.start_dot.x - next_specs.start_dot.x,
+	// 					 y:next_specs.start_dot.y} ) ;
+
+	// console.log( "ligature_dots" ) ;
+	// console.log( ligature_dots ) ;
+
+	ligature_dots = smooth_out_ys( ligature_dots ) ;
+	// console.log( "smoothed ligature_dots" ) ;
+	// console.log( ligature_dots ) ;
+
+	return ligature_dots ;
+}
+
+
+function smooth_out_ys( dots ) {
+	// this function sucks
+	return dots ;
+
+	var new_dots = [] ;
+
+	var y_average = 0 ;
+	for( var i=0 ; i<dots.length ; i++ ) {
+		y_average += dots[i].y ;
+	}
+	y_average /= dots.length ;
+
+	// console.log( "y_average" ) ;
+	// console.log( y_average ) ;
+
+	for( var i=0 ; i<Math.floor(dots.length/2) ; i++ ) {
+		y_average_skew_weigth = i ;
+		new_dots.push( {x:dots[i].x,
+						y:(dots[i].y+y_average*y_average_skew_weigth)/(1+1*y_average_skew_weigth) } ) ;
+	}
+	for( var i=Math.ceil(dots.length/2) ; i<dots.length ; i++ ) {
+		y_average_skew_weigth = dots.length-i-1 ;
+		new_dots.push( {x:dots[i].x,
+						y:(dots[i].y+y_average*y_average_skew_weigth)/(1+1*y_average_skew_weigth) } ) ;
+	}
+
+	return new_dots ;
 }
 
 

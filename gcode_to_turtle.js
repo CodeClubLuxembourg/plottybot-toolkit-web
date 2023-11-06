@@ -36,47 +36,53 @@ function gcode_to_turtle( gcode, normalize, aggregation_algorithm, aggregation_a
 	// finding paths
 	var paths = [] ;
 	gcode = gcode.split( "(Start cutting path id:" ) ;
+	color = false ;
 	for( var i=1 ; i<gcode.length ; i++ ) {
 		path = gcode[i] ;
 		path = path.split( "(End cutting path id:" ) ;
 		path = path[0] ;
 		path = path.split( "\n" ) ;
-		var new_path = {'cords':[]} ;
+		var new_path = {'cords':[], 'color':color} ;
 		for( var j=0 ; j<path.length ; j++ ) {
-			line = path[j] ;
-			line = line.split( " " ) ;
-			X = false ;
-			Y = false ;
-			for( var k=0 ; k<line.length ; k++ ) {
-				item = line[k] ;
-				var first_char = item.substring( 0, 1 ) ;
-				var the_rest = item.substring( 1 ) ;
-				if( first_char=="X" ) {
-					X = parseFloat( the_rest ) ;
-				} else if( first_char=="Y" ) {
-					Y = parseFloat( the_rest ) ;
-				}
-			}
-
-			if( X!==false && Y!==false ) {
-				if( X!==false && (X<lowest_x || lowest_x===false) ) {
-					lowest_x = X ;
-				}
-				if( Y!==false && (Y<lowest_y || lowest_y===false) ) {
-					lowest_y = Y ;
-				}
-				if( X!==false && (X>highest_x || highest_x===false) ) {
-					highest_x = X ;
-				}
-				if( Y!==false && (Y>highest_y || highest_y===false) ) {
-					highest_y = Y ;
+			if( path[j].substring(0, 6)=="color(" ) {
+				color = path[j].split( "(" )[1].split(")")[0].trim() ;
+				new_path['color'] = color ;
+			} else {
+				line = path[j] ;
+				line = line.split( " " ) ;
+				X = false ;
+				Y = false ;
+				for( var k=0 ; k<line.length ; k++ ) {
+					item = line[k] ;
+					var first_char = item.substring( 0, 1 ) ;
+					var the_rest = item.substring( 1 ) ;
+					if( first_char=="X" ) {
+						X = parseFloat( the_rest ) ;
+					} else if( first_char=="Y" ) {
+						Y = parseFloat( the_rest ) ;
+					}
 				}
 
-				if( !('origin' in new_path) ) {
-					new_path['origin'] = {x:X, y:Y} ;
-				}
-				new_path['cords'].push( {x:X, y:Y} ) ;
+				if( X!==false && Y!==false ) {
+					if( X!==false && (X<lowest_x || lowest_x===false) ) {
+						lowest_x = X ;
+					}
+					if( Y!==false && (Y<lowest_y || lowest_y===false) ) {
+						lowest_y = Y ;
+					}
+					if( X!==false && (X>highest_x || highest_x===false) ) {
+						highest_x = X ;
+					}
+					if( Y!==false && (Y>highest_y || highest_y===false) ) {
+						highest_y = Y ;
+					}
 
+					if( !('origin' in new_path) ) {
+						new_path['origin'] = {x:X, y:Y} ;
+					}
+					new_path['cords'].push( {x:X, y:Y} ) ;
+
+				}
 			}
 		}
 		if( new_path['cords'].length>0 ) {
@@ -86,22 +92,33 @@ function gcode_to_turtle( gcode, normalize, aggregation_algorithm, aggregation_a
 	}
 
 	// normalization & shifting if needs be
+	var normalizing_ratio = 1.0 ;
+	var shift_by_x = 0.0 ;
+	var shift_by_y = 0.0 ;
 	if( normalize ) {
-		var normalizing_ratio = 1.0 ;
 		var normalizing_ratio_x = canvas_max_x / (highest_x-lowest_x) ;
 		var normalizing_ratio_y = canvas_max_y / (highest_y-lowest_y) ;
-		var normalizing_ratio = Math.min( normalizing_ratio_x, normalizing_ratio_y ) ;
+		normalizing_ratio = Math.min( normalizing_ratio_x, normalizing_ratio_y ) ;
+		shift_by_x = (canvas_max_x - (highest_x-lowest_x)*normalizing_ratio) / 2
+		shift_by_y = (canvas_max_y - (highest_y-lowest_y)*normalizing_ratio) / 2
 		for( i=0 ; i<paths.length ; i++ ) {
-			paths[i]['origin'].x = (paths[i]['origin'].x - lowest_x) * normalizing_ratio
-			paths[i]['origin'].y = (paths[i]['origin'].y - lowest_y) * normalizing_ratio
-			paths[i]['destination'].x = (paths[i]['destination'].x - lowest_x) * normalizing_ratio
-			paths[i]['destination'].y = (paths[i]['destination'].y - lowest_y) * normalizing_ratio
+			paths[i]['origin'].x = (paths[i]['origin'].x - lowest_x) * normalizing_ratio + shift_by_x ;
+			paths[i]['origin'].y = (paths[i]['origin'].y - lowest_y) * normalizing_ratio + shift_by_y ;
+			paths[i]['destination'].x = (paths[i]['destination'].x - lowest_x) * normalizing_ratio + shift_by_x ;
+			paths[i]['destination'].y = (paths[i]['destination'].y - lowest_y) * normalizing_ratio + shift_by_y ;
 			for( j=0 ; j<paths[i]['cords'].length ; j++ ) {
-				paths[i]['cords'][j].x = (paths[i]['cords'][j].x - lowest_x) * normalizing_ratio ;
-				paths[i]['cords'][j].y = (paths[i]['cords'][j].y - lowest_y) * normalizing_ratio ;
+				paths[i]['cords'][j].x = (paths[i]['cords'][j].x - lowest_x) * normalizing_ratio + shift_by_x ;
+				paths[i]['cords'][j].y = (paths[i]['cords'][j].y - lowest_y) * normalizing_ratio + shift_by_y ;
 			}
 		}
 	}
+	console.log( "lowest_x: " + lowest_x ) ;
+	console.log( "highest_x: " + highest_x ) ;
+	console.log( "lowest_y: " + lowest_y ) ;
+	console.log( "highest_y: " + highest_y ) ;
+	console.log( "normalization_ratio: " + normalizing_ratio ) ;
+	console.log( "shift_by_x: " + shift_by_x ) ;
+	console.log( "shift_by_y: " + shift_by_y ) ;
 
 	var distance_between_penstrokes = 0 ;
 	for( i=1 ; i<paths.length ; i++ ) {
@@ -180,7 +197,14 @@ function gcode_to_turtle( gcode, normalize, aggregation_algorithm, aggregation_a
 	var last_x = false ;
 	var last_y = false ;
 	var skip_next_pen_down = false ;
+	var last_color = false ;
 	for( var i=0 ; i<new_paths.length ; i++ ) {
+		if( new_paths[i]['color']!==false ) {
+			if( last_color!=new_paths[i]['color'] ) {
+				output += "color( " + new_paths[i]['color'] + " )\n" ;
+				last_color = new_paths[i]['color'] ;
+			}
+		}
 		for( var j=0 ; j<new_paths[i]['cords'].length ; j++ ) {
 			last_x = new_paths[i]['cords'][j].x ;
 			last_y = new_paths[i]['cords'][j].y ;

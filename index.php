@@ -16,6 +16,8 @@
 
 <?php require( "mandalagaba.php" ) ; ?>
 
+<?php require( "web_instructions.php" ) ; ?>
+
 <?php require( "mechanics.php" ) ; ?>
 
 <?php require( "footer.php" ) ; ?>

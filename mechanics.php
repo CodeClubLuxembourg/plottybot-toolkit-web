@@ -12,11 +12,22 @@
 	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="acceleration_steps" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;acceleration_steps</div>
 	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="deceleration_steps" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;deceleration_steps</div>
 	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="pen_down_action_time" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;pen_down_action_time</div>
-	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="pen_down_pulse_width" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;pen_down_pulse_width</div>
+	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="pen_down_pulse_width" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;pen_down_pulse_width (0 or 500->2500)</div>
 	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="pen_down_sleep_before_move_time" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;pen_down_sleep_before_move_time</div>
 	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="pen_up_action_time" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;pen_up_action_time</div>
-	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="pen_up_pulse_width" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;pen_up_pulse_width</div>
+	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="pen_up_pulse_width" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;pen_up_pulse_width (0 or 500->2500)</div>
 	<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="pen_up_sleep_before_move_time" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;pen_up_sleep_before_move_time</div>
+	<?php
+	$gondola = false ;
+	if( file_exists("/var/mode") &&
+		trim(file_get_contents("/var/mode"))=="gondola" ) {
+	?>
+		<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="gondola_steps_per_cm" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;gondola_steps_per_cm</div>
+		<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="gondola_reserve_margin" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;gondola_reserve_margin</div>
+		<div class="form-inline"><input class="form-control iknowwhatimdoing" disabled type="text" id="gondola_max_travel" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;gondola_max_travel</div>
+	<?php
+		}
+	?>
 	<div class="form-inline"><input class="form-control" disabled type="text" id="microstepping" onKeyUp="delay_updated_variable(this.id);"/>&nbsp;microstepping</div>
 	<div class="form-inline"><button class="btn btn-light iknowwhatimdoing" disabled onClick="test_bottom_stepper();">Test Bottom Stepper Motor</button></div>
 	<div class="form-inline"><button class="btn btn-light iknowwhatimdoing" disabled onClick="test_top_stepper();">Test Top Stepper Motor</button></div>

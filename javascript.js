@@ -44,6 +44,9 @@ function body_loaded() {
 	canvas_max_y = size ;
 	get_status() ;
 	handwriting_typewriter_loaded() ;
+
+	interpret_status( '{"canvas_max_x":100,"canvas_max_y":100}' ) ;
+	register_pcode_myform_change_event() ;
 }
 
 
@@ -52,6 +55,7 @@ function calibrate_automatic() {
 	calibration_done = false ;
 	show( "section_draw_disabled" ) ;
 	show( "section_mandalagaba_disabled" ) ;
+	show( "section_web_instructions_disabled" ) ;
 	var elements_to_disable = document.getElementsByClassName( "needs_calibration" ) ;
 	for( var i=0 ; i<elements_to_disable.length ; i++ ) {
 		elements_to_disable[i].disabled = true ;
@@ -71,6 +75,7 @@ function calibrate_manually() {
 	calibration_done = false ;
 	show( "section_draw_disabled" ) ;
 	show( "section_mandalagaba_disabled" ) ;
+	show( "section_web_instruction_disabled" ) ;
 	var elements_to_disable = document.getElementsByClassName( "needs_calibration" ) ;
 	for( var i=0 ; i<elements_to_disable.length ; i++ ) {
 		elements_to_disable[i].disabled = true ;
@@ -102,6 +107,9 @@ function draw() {
 			play() ;
 		} else {
 			var tcode = document.getElementById( "tcode" ).value ;
+			if( pcode!==false ) {
+				tcode = pcode ;
+			}
 			ajax_call( "command.php", ["command", "draw",
 				                       "data", JSON.stringify(tcode)], null ) ;
 		}
@@ -145,7 +153,7 @@ function go_to_top_right_corner_clicked() {
 
 }
 function go_to_bottom_right_corner_clicked() {
-	go_to( canvas_max_x-10, 0 ) ;
+	go_to( canvas_max_x-10, 10 ) ;
 	hide( "go_to_top_left_corner" ) ;
 	hide( "go_to_top_right_corner" ) ;
 	hide( "go_to_bottom_right_corner" ) ;
@@ -153,7 +161,7 @@ function go_to_bottom_right_corner_clicked() {
 
 }
 function go_to_bottom_left_corner_clicked() {
-	go_to( 0, 0 ) ;
+	go_to( 10, 10 ) ;
 	show( "go_to_top_left_corner" ) ;
 	hide( "go_to_top_right_corner" ) ;
 	hide( "go_to_bottom_right_corner" ) ;
@@ -184,6 +192,8 @@ function interpret_status( status ) {
 		if( wifi_done ) {
 			hide( "section_mandalagaba_disabled" ) ;
 			show( "section_mandalagaba_enabled" ) ;
+			hide( "section_web_instructions_disabled" ) ;
+			show( "section_web_instructions_enabled" ) ;
 			var elements_to_enable = document.getElementsByClassName( "needs_calibration_and_wifi" ) ;
 			for( var i=0 ; i<elements_to_enable.length ; i++ ) {
 				elements_to_enable[i].disabled = false ;
@@ -197,9 +207,16 @@ function interpret_status( status ) {
 		show( "section_calibration_pen_adjustment" ) ;
 		hide( "section_calibration_automatic" ) ;
 		hide( "section_calibration_manual" ) ;
+		if( document.getElementById("section_calibration_gondola")!==null ) {
+			hide( "section_calibration" ) ;
+		}
 		
-		document.getElementById( "calibrate_manually" ).innerHTML = "Re-" + document.getElementById( "calibrate_manually" ).innerHTML ;
-		document.getElementById( "calibrate_automatic" ).innerHTML = "Re-" + document.getElementById( "calibrate_automatic" ).innerHTML ;
+		if( document.getElementById("calibrate_manually")!=null ) {
+			document.getElementById( "calibrate_manually" ).innerHTML = "Re-" + document.getElementById( "calibrate_manually" ).innerHTML ;
+		}
+		if( document.getElementById("calibrate_manually")!=null ) {
+			document.getElementById( "calibrate_automatic" ).innerHTML = "Re-" + document.getElementById( "calibrate_automatic" ).innerHTML ;
+		}
 	}
 
 	if( document.getElementById( 'default_step_sleep' ).value!=status['default_step_sleep'] ) {
@@ -234,6 +251,15 @@ function interpret_status( status ) {
 	}
 	if( document.getElementById( 'pen_up_sleep_before_move_time' ).value!=status['pen_up_sleep_before_move_time'] ) {
 		document.getElementById( 'pen_up_sleep_before_move_time' ).value = status['pen_up_sleep_before_move_time'] ;
+	}
+	if( document.getElementById( 'gondola_steps_per_cm' ).value!=status['gondola_steps_per_cm'] ) {
+		document.getElementById( 'gondola_steps_per_cm' ).value = status['gondola_steps_per_cm'] ;
+	}
+	if( document.getElementById( 'gondola_reserve_margin' ).value!=status['gondola_reserve_margin'] ) {
+		document.getElementById( 'gondola_reserve_margin' ).value = status['gondola_reserve_margin'] ;
+	}
+	if( document.getElementById( 'gondola_max_travel' ).value!=status['gondola_max_travel'] ) {
+		document.getElementById( 'gondola_max_travel' ).value = status['gondola_max_travel'] ;
 	}
 
 	if( status['canvas_max_x']>0 &&
@@ -323,6 +349,14 @@ function interpret_status( status ) {
 		show( "mg_disconnect" ) ;
 	}
 
+	if( status['acquire_instructions_from_web_on']==true ) {
+		show( "web_instructions_disconnect" ) ;
+		hide( "web_instructions_connect" ) ;
+	} else {
+		hide( "web_instructions_disconnect" ) ;
+		show( "web_instructions_connect" ) ;
+	}
+
 	if( status['draw_going'] ) {
 		if( status['pause_draw'] ) {
 			disable( "pause_button" ) ;
@@ -343,11 +377,24 @@ function interpret_status( status ) {
 	}
 
 	if( 'error' in status && status['error']!="" ) {
-		document.getElementById( "section_error_content" ).innerHTML = status['errors'] ;
+		document.getElementById( "section_error_content" ).innerHTML = status['error'] ;
 		show( "section_error" ) ;
 	} else {
 		hide( "section_error" ) ;
 	}
+}
+
+
+function gondola_calibrate() {
+	var gondola_motor_distance = document.getElementById( "gondola_motor_distance" ).value ;
+	if( !/^[0-9]+(\.[0-9]+|)$/.test(gondola_motor_distance) ) {
+		alert( "invalid value" ) ;
+		return false ;
+	}
+
+	ajax_call( "command.php", ["command", "gondola_calibrate("+gondola_motor_distance+")"], function() {
+		hide( "section_calibration" ) ;
+	} ) ;
 }
 
 
@@ -600,7 +647,7 @@ function ink_refill_routine_enabled() {
 	}
 	ajax_call( "command.php", ["command", "ink_refill_routine_enabled",
 		                       "data", JSON.stringify(enabled)], function() {
-				//get_status() ; // TODO needed?
+				// get_status() ; // creates issues when enabled
 				tcode_changed(0, 1000000) ;
 	} ) ;
 }
@@ -614,15 +661,15 @@ function ink_refill_every_penstroke() {
 	}
 	ajax_call( "command.php", ["command", "ink_refill_every_penstroke",
 		                       "data", JSON.stringify(enabled)], function() {
-				//get_status() ; // TODO needed?
+				// get_status() ; // creates issues when enabled
 	} ) ;
 }
 
 function ink_refill_every_x() {
-	value = document.getElementById( "ink_refill_every_x" ).value ;
+	value = parseInt( document.getElementById( "ink_refill_every_x" ).value ) ;
 	ajax_call( "command.php", ["command", "ink_refill_every_x",
 		                       "data", JSON.stringify(value)], function() {
-				//get_status() ; // TODO needed?
+				// get_status() ; // creates issues when enabled
 	} ) ;
 }
 
@@ -699,6 +746,7 @@ function ink_refill_conflict_check() {
 
 
 function tcode_changed( time_to_draw, x_strokes_at_a_time ) {
+	pcode = false ;
 
 	var ink_refill_pcode = "" ;
 	if( document.getElementById( "ink_refill_routine_enabled" ).checked===true ) {
@@ -720,7 +768,7 @@ function gcode_changed() {
 		                                                        document.getElementById('aggregation_algorithm').value,
 		                                                        {x:parseInt(document.getElementById('aggregation_algorithm_polarized_x').value), y:parseInt(document.getElementById('aggregation_algorithm_polarized_y').value)},
 		                                                        document.getElementById('skip_pen_jumps_shorter_than_value').value ) ;
-	tcode_changed( 10, 10 ) ;	 		
+	tcode_changed( 10, 100 ) ;
 }
 
 
@@ -736,4 +784,107 @@ function test_bottom_stepper() {
 
 function test_top_stepper() {
 	ajax_call( "command.php", ["command", "test_top_stepper"], null ) ;
+}
+
+function rotate_ccw() {
+	gcode = document.getElementById( 'gcode' ).value ;
+	gcode = gcode.split( "\n" ) ;
+
+	var new_gcode = "" ;
+
+	for( var i=0 ; i<gcode.length ; i++ ) {
+		var line = gcode[i].split( " " ) ;
+		X = false ;
+		Y = false ;
+		for( var k=0 ; k<line.length ; k++ ) {
+			item = line[k] ;
+			var first_char = item.substring( 0, 1 ) ;
+			var the_rest = item.substring( 1 ) ;
+			if( first_char=="X" ) {
+				X = parseFloat( the_rest ) ;
+			} else if( first_char=="Y" ) {
+				Y = parseFloat( the_rest ) ;
+			}
+		}
+
+		if( X!==false && Y!==false ) {
+			var new_line = "" ;
+			for( var k=0 ; k<line.length ; k++ ) {
+				if( k>0 ) {
+					new_line += " " ;
+				}
+				item = line[k] ;
+				var first_char = item.substring( 0, 1 ) ;
+				if( first_char=="X" ) {
+					new_line += "X" + (canvas_max_x - Y).toString() ;
+				} else if( first_char=="Y" ) {
+					new_line += "Y" + X.toString() ;
+				} else {
+					new_line += item ;
+				}
+			}
+			// console.log( new_line ) ;
+			new_gcode += new_line + "\n" ;
+		} else {
+			new_gcode += line.join( " " ) + "\n" ;
+		}
+		// console.log( X, Y ) ;
+	}
+
+	document.getElementById( 'gcode' ).value = new_gcode ;
+
+	gcode_changed() ;
+}
+
+
+function mirror_horizontally() {
+	gcode = document.getElementById( 'gcode' ).value ;
+	gcode = gcode.split( "\n" ) ;
+
+	var new_gcode = "" ;
+
+	for( var i=0 ; i<gcode.length ; i++ ) {
+		var line = gcode[i].split( " " ) ;
+		X = false ;
+		Y = false ;
+		for( var k=0 ; k<line.length ; k++ ) {
+			item = line[k] ;
+			var first_char = item.substring( 0, 1 ) ;
+			var the_rest = item.substring( 1 ) ;
+			if( first_char=="X" ) {
+				X = parseFloat( the_rest ) ;
+			} else if( first_char=="Y" ) {
+				Y = parseFloat( the_rest ) ;
+			}
+		}
+
+		if( X!==false && Y!==false ) {
+			var new_line = "" ;
+			for( var k=0 ; k<line.length ; k++ ) {
+				if( k>0 ) {
+					new_line += " " ;
+				}
+				item = line[k] ;
+				var first_char = item.substring( 0, 1 ) ;
+				if( first_char=="X" ) {
+					// new_line += "X" + (canvas_max_x - Y).toString() ;
+					 new_line += "X" + (canvas_max_x - X).toString() ;
+				} else if( first_char=="Y" ) {
+					// new_line += "Y" + X.toString() ;
+					new_line += "Y" + Y.toString() ;
+				} else {
+					new_line += item ;
+				}
+			}
+			// console.log( new_line ) ;
+			new_gcode += new_line + "\n" ;
+		} else {
+			new_gcode += line.join( " " ) + "\n" ;
+		}
+		// console.log( X, Y ) ;
+	}
+
+	document.getElementById( 'gcode' ).value = new_gcode ;
+
+	gcode_changed() ;
 }

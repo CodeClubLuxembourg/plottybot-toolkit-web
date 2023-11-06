@@ -7,23 +7,23 @@ function draw_turtle_code( go_to_code, canvas, time_to_draw, x_strokes_at_a_time
 	pen_down=typeof pen_down!=='undefined'?pen_down:false ;
 
 	var ctx = canvas.getContext('2d') ;
-	ctx.strokeStyle = "#000000" ;
 
 	if( line_number==0 ) {
 		clearTimeout( draw_turtle_code_timeout_id ) ;
 		ctx.clearRect( 0, 0, canvas.width, canvas.height ) ;
+		ctx.strokeStyle = "#000000" ;
 		go_to_code = go_to_code.replace( " ", "" ) ;
 		go_to_code = go_to_code.toLowerCase() ;
 		go_to_code = go_to_code.split( "\n" ) ;
 	}
 
-	// // no normalization
+	// no normalization
 	// normalizing_ratio_X = 1.0 ;
 	// normalizing_ratio_Y = 1.0 ;
 
 	// preview_ratio
-	normalizing_ratio_X = preview_ratio ;
-	normalizing_ratio_Y = preview_ratio ;
+	normalizing_ratio_X = canvas.height / canvas_max_y ;
+	normalizing_ratio_Y = canvas.width / canvas_max_x ;
 
 	for( var i=line_number ; i<go_to_code.length ; i++ ) {
 		var line = go_to_code[i] ;
@@ -89,8 +89,8 @@ function draw_turtle_code( go_to_code, canvas, time_to_draw, x_strokes_at_a_time
 			}
 		}
 
-		if( i%x_strokes_at_a_time==0 && i<go_to_code.length-1 ) {
-			draw_turtle_code_timeout_id = setTimeout( function() { draw_turtle_code( go_to_code, canvas, time_to_draw, x_strokes_at_a_time, i+1, from_X, from_Y, pen_down ) ; }, (time_to_draw*1000)/(go_to_code.length/x_strokes_at_a_time) ) ;
+		if( i>0 && i%x_strokes_at_a_time==0 && i<go_to_code.length-1 ) {
+			draw_turtle_code_timeout_id = setTimeout( function() { draw_turtle_code( go_to_code, canvas, time_to_draw, x_strokes_at_a_time, i+1, from_X, from_Y, pen_down ) ; }, (time_to_draw*1000)/Math.max(1,(go_to_code.length/x_strokes_at_a_time)) ) ;
 			return false ;
 		}
 	}
